@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 /**
  * @Author: cc
  * @Author: 346852628@qq.com
@@ -8,5 +10,5 @@ package main
  */
 
 func main() {
-
+	fmt.Println("welcome to project gingo!")
 }
