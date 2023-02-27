@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/goccy/go-json"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -19,6 +20,11 @@ import (
  * @Date: 2023/02/26
  * @Desc:backend project entry point
  */
+
+func dbInit() {
+	log.Println("dbInit")
+
+}
 
 func main() {
 	fmt.Println("welcome to project gingo!")
@@ -59,5 +65,23 @@ func main() {
 		})
 	})
 
-	router.Run()
+	router.POST("/register", func(c *gin.Context) {
+		b, _ := c.GetRawData() // 从c.Request.Body读取请求数据
+		// 定义map或结构体
+		var m map[string]interface{}
+		// 反序列化
+		_ = json.Unmarshal(b, &m)
+
+		c.JSON(200, gin.H{
+			"message": "Register success !",
+			"data":    m,
+		})
+	})
+	router.GET("/login", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Login success!",
+		})
+	})
+
+	router.Run("0.0.0.0:7000")
 }
