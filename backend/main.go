@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"gingo/src/db/mangodb"
+	"gingo/src/handler/registerHandler"
 	"log"
-
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/goccy/go-json"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -26,8 +26,8 @@ func dbInit() {
 
 }
 
-func main() {
-	fmt.Println("welcome to project gingo!")
+func InitMangoDB() {
+	log.Println("InitMangoDB")
 
 	//创建上下文
 	ctx, cancelFunc := context.WithCancel(context.TODO())
@@ -38,22 +38,29 @@ func main() {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 
 	// Connect to MongoDB
-	client, err := mongo.Connect(ctx, clientOptions)
+	var err error
+	mangodb.Client, err = mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// Check the connection
-	err = client.Ping(ctx, nil)
+	err = mangodb.Client.Ping(ctx, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Connected to MongoDB!")
 
-	defer client.Disconnect(ctx)
+	defer mangodb.Client.Disconnect(ctx)
+}
 
-	collect := client.Database("corn").Collection("jobs")
+func main() {
+	fmt.Println("welcome to project gingo!")
+
+	InitMangoDB()
+
+	collect := mangodb.Client.Database("corn").Collection("jobs")
 	//插入数据
-	mangodb.InsertRecord(client, collect)
+	mangodb.InsertRecord(mangodb.Client, collect)
 	//查询数据
 	mangodb.FindLog(collect)
 
@@ -65,19 +72,10 @@ func main() {
 		})
 	})
 
-	router.POST("/register", func(c *gin.Context) {
-		b, _ := c.GetRawData() // 从c.Request.Body读取请求数据
-		// 定义map或结构体
-		var m map[string]interface{}
-		// 反序列化
-		_ = json.Unmarshal(b, &m)
+	router.POST("/register", registerHandler.RegisterHandler)
 
-		c.JSON(200, gin.H{
-			"message": "Register success !",
-			"data":    m,
-		})
-	})
 	router.GET("/login", func(c *gin.Context) {
+
 		c.JSON(200, gin.H{
 			"message": "Login success!",
 		})

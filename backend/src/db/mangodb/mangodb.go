@@ -3,17 +3,21 @@ package mangodb
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+var Client *mongo.Client
+
 type TimePoint struct {
 	StartTime int64 `bson:"startTime"`
-	EndTIme   int64 `bson:"endTime"`
+	EndTime   int64 `bson:"endTime"`
 }
 
 // 存储在mongodb中的内容
@@ -29,6 +33,11 @@ type LogRecord struct {
 	JobName string `bson:"jobName"`
 }
 
+type Person struct {
+	Name string
+	Age  int
+}
+
 func InsertRecord(client *mongo.Client, collect *mongo.Collection) (insertID primitive.ObjectID) {
 
 	collect = client.Database("corn").Collection("jobs")
@@ -39,7 +48,7 @@ func InsertRecord(client *mongo.Client, collect *mongo.Collection) (insertID pri
 		Content: "Hello_World",
 		Timepoint: TimePoint{
 			StartTime: time.Now().Unix(),
-			EndTIme:   time.Now().Unix() + 10,
+			EndTime:   time.Now().Unix() + 10,
 		},
 	}
 	insertRest, err := collect.InsertOne(context.TODO(), record)
@@ -78,5 +87,40 @@ func FindLog(collect *mongo.Collection) {
 		}
 		//打印
 		fmt.Println(*records)
+	}
+}
+
+func FindOne() {
+	fmt.Println("FindOne:")
+	col := Client.Database("my_db").Collection("my_col")
+	var p Person
+
+	//查询单条记录
+	err := col.FindOne(context.TODO(), bson.D{{Key: "name", Value: "zhang3"}}).Decode(&p)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fmt.Println(p)
+}
+
+func Find() {
+	fmt.Println("Find:")
+	opt := options.Find()
+	opt.SetLimit(5)
+
+	col := Client.Database("my_db").Collection("my_col")
+
+	//Find查询多条记录，将会返回一个迭代器，使用完记得关闭
+	cor, err := col.Find(context.TODO(), bson.D{{Key: "name", Value: "zhang3"}}, opt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer cor.Close(context.TODO())
+
+	for cor.Next(context.TODO()) {
+		var p Person
+		cor.Decode(&p)
+		fmt.Println(p)
 	}
 }
