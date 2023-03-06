@@ -15,12 +15,7 @@ import (
 
 var Client *mongo.Client
 
-type TimePoint struct {
-	StartTime int64 `bson:"startTime"`
-	EndTime   int64 `bson:"endTime"`
-}
-
-// 存储在mongodb中的内容
+//存储在mongodb中的内容
 type RecordLog struct {
 	JobName   string    `bson:"jobName"`
 	Command   string    `bson:"command"`

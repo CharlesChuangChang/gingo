@@ -50,7 +50,6 @@ func InitMangoDB() {
 	}
 	fmt.Println("Connected to MongoDB!")
 
-	defer mangodb.Client.Disconnect(ctx)
 }
 
 func main() {
