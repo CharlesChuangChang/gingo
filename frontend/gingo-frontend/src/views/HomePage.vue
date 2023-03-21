@@ -1,5 +1,5 @@
 <template>
-    <div>home vue   </div>
+    <div></div>
     <!-- <el-button type="primary" v-on="this.GoToLogin()">login</el-button> -->
 </template>
 
@@ -10,5 +10,10 @@
     export default {
         // eslint-disable-next-line vue/no-unused-components
         components: { ElButton, ElMessage},
+        data() {
+            return {
+
+            }
+        }
     }
 </script>

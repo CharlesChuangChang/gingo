@@ -1,12 +1,12 @@
 package business
 
 import (
+	"common/returnResult"
+	"db/mangodbDriver"
 	"encoding/json"
 	"fmt"
-	"gingo/src/db/mangodb"
+	loginModel "myModel/dbModel"
 	"time"
-
-	returnResult "gingo/src/common/result"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -29,7 +29,7 @@ func RegisterNewUser(c *gin.Context) {
 	// 反序列化
 	_ = json.Unmarshal(b, &m)
 
-	user := mangodb.UserInfo{
+	user := loginModel.UserInfo{
 		UserId:    "xxx",
 		UserName:  m["userName"].(string),
 		Password:  m["pass"].(string),
@@ -37,17 +37,20 @@ func RegisterNewUser(c *gin.Context) {
 		Token:     "",
 		Status:    "Normal",
 		HeadImage: "",
-		Timepoint: mangodb.TimePoint{StartTime: time.Now().Unix(), EndTime: 0},
+		Timepoint: loginModel.TimePoint{StartTime: time.Now().Unix(), EndTime: 0},
 	}
 
-	if err := mangodb.RegisterCollectionFindByEmail(mangodb.Client, &user); err != nil {
+	bExist, _ := mangodbDriver.RegisterCollectionFindByEmail(mangodbDriver.Client, &user)
+	if bExist {
+		c.JSON(200, returnResult.Fail("Email already exists"))
+		return
+	}
+
+	if err := mangodbDriver.RegisterCollectionAdd(mangodbDriver.Client, &user); err != nil {
 		fmt.Println(err)
-		c.JSON(200, returnResult.Fail("Error while registering find by email"))
+		c.JSON(200, returnResult.Fail(err.Error()))
+		return
 	}
 
-	if err := mangodb.RegisterCollectionAdd(mangodb.Client, &user); err != nil {
-		fmt.Println(err)
-	}
-
-	c.JSON(200, m)
+	c.JSON(200, returnResult.SuccessObject("Register success!", m))
 }

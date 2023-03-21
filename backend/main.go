@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
+	"db/mangodbDriver"
 	"fmt"
-	"gingo/src/db/mangodb"
-	"gingo/src/handler/registerHandler"
+	"handler/loginHandler"
+	"handler/registerHandler"
 	"log"
 	"time"
 
@@ -39,12 +40,12 @@ func InitMangoDB() {
 
 	// Connect to MongoDB
 	var err error
-	mangodb.Client, err = mongo.Connect(ctx, clientOptions)
+	mangodbDriver.Client, err = mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// Check the connection
-	err = mangodb.Client.Ping(ctx, nil)
+	err = mangodbDriver.Client.Ping(ctx, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,28 +58,20 @@ func main() {
 
 	InitMangoDB()
 
-	collect := mangodb.Client.Database("corn").Collection("jobs")
+	collect := mangodbDriver.Client.Database("corn").Collection("jobs")
 	//插入数据
-	mangodb.InsertRecord(mangodb.Client, collect)
+	mangodbDriver.InsertRecord(mangodbDriver.Client, collect)
 	//查询数据
-	mangodb.FindLog(collect)
+	mangodbDriver.FindLog(collect)
 
 	router := gin.Default()
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "welcome to project gingo!",
-		})
-	})
-
 	router.POST("/register", registerHandler.RegisterHandler)
 
-	router.GET("/login", func(c *gin.Context) {
+	router.POST("/login", loginHandler.LoginHandler)
+	authUrlRouter := router.Group("/gingo/V1")
 
-		c.JSON(200, gin.H{
-			"message": "Login success!",
-		})
-	})
+	authUrlRouter.Use()
 
-	router.Run("0.0.0.0:7000")
+	router.Run("0.0.0.0:9091")
 }
